@@ -8,7 +8,7 @@ addpath('benchmarks\', 'algorithms\');
 
 % Parametros
 numIteraciones = 50; % Numero de iteraciones
-pobSize = 50; % Tamaño de la poblacion
+pobSize = 100; % Tamaño de la poblacion
 numVariables = 2; % Dimension de problema
 umbralCambio = 0.1; % Umbral para considerar un cambio en la funcion
 numSentinelas = 100; % Numero de puntos de control para detectar cambios
@@ -20,7 +20,7 @@ switch benchmarkID
         bounds = [-5, 5]; % Limtes de la funcion
         numPeaks = 15; % Numero de picos
         k = 0.4; % Paso de cambio
-        t0 = 5; % Velocidad de cambio
+        t0 = numIteraciones / 2; % Velocidad de cambio
         rng(1); % Velocidad de reproductibildiad
         % Los siguientes parametros son los de cambio establecidos
         envParams.h0 = 30 + 20 * rand(numPeaks, 1);
@@ -34,14 +34,14 @@ switch benchmarkID
         envParams.cc = 2 * (rand(numPeaks, dim) - 0.5);
         li = [bounds(1), bounds(1)];
         ls = [bounds(2), bounds(2)];
-        maximize = true;
+        maximize = false;
         gridStep = 0.2;
         zMax = 70;
         evalFun = @(x, env) gaussian_mixture(x, env.h, env.w, env.c);
     case 2 % MPB_Griewank
         dim = 2;
         bounds = [-50, 50];
-        numPeaks = 5; % Numero de picos
+        numPeaks = 15; % Numero de picos
         envParams.severity = 1.0; % Gravedad de cambio
         envParams.changeFrequency = 10; % Cada cuanto se realiza el cambio
         envParams.h = 30 + 40 * rand(numPeaks, 1);
@@ -50,7 +50,7 @@ switch benchmarkID
         li = [bounds(1), bounds(1)];
         ls = [bounds(2), bounds(2)];
         maximize = true;
-        gridStep = 2;
+        gridStep = 0.2;
         zMax = 70;
         evalFun = @(x, env) mpb_eval(x, env.h, env.w, env.c);
     case 3 % GDBG_sphere
@@ -215,7 +215,7 @@ for it = 1:numIteraciones
     % Visualizacion
 
     % Grid
-    [X, Y] = meshgrid(bounds(1):0.2:bounds(2));
+    [X, Y] = meshgrid(bounds(1):gridStep:bounds(2));
     Z = zeros(size(X));
 
 
