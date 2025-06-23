@@ -1,144 +1,107 @@
-% Implementación del meta-algoritmo 4 del paper sobre el algoritmo PSO
-function [population, fitness, bestSolution, bestFitness] = Algorithm3(population, fitness, iter, params, evalFun, envParams, huboCambio)
+function [population, fitness, bestSolution, bestFitness] = GA_Multiploide(population, fitness, iter, params, evalFun, envParams, huboCambio)
 
 if huboCambio
     fprintf(">>> Cambio en el entorno en la iteración %d <<<\n", iter);
 end
 
-% Parámetros del PSO
+persistent multiploides dominanceLevels;
 popSize = params.popSize;
 numVariables = params.numVariables;
 bounds = params.bounds;
 maximize = params.maximize;
-c1 = 0.05; % Aprendizaje cognitivo
-c2inicio = 1; % Aprendizaje social inicial
-c2final = 1.5; % Aprendizaje social final
-wm = randn(popSize, 1); % Inercia inicial
-n = zeros(popSize, 1); % Contador para inercia
+mutationRate = 0.1;
+crossoverRate = 0.8;
+numAlleles = 3;
 
-% Matriz topológica Double-Linked
-Nbh = zeros(popSize, 3);
-Nbh(:, 1) = (1:popSize)';
-Nbh(:, 2) = (0:popSize-1)';
-Nbh(:, 3) = (2:popSize+1)';
-Nbh(1, 2) = popSize;
-Nbh(end, end) = 1;
-
-% Inicializar variables persistentes si es la primera iteración
-persistent pbest pbestFitness velocities w_inercia;
+% Inicializar multiploides y niveles de dominancia
 if iter == 1
+    multiploides = zeros(popSize, numVariables, numAlleles);
+    dominanceLevels = ones(popSize, numVariables, numAlleles) / numAlleles;
 
-    % Asegurarnos que no se tomen en cuenta las areas donde no hay region
-    if ~maximize
-        for k = 1:popSize
-            if isnan(fitness(k))
-                fitness(k) = 1000000;
-            end
-        end
-    else
-        for k = 1:popSize
-            if isnan(fitness(k))
-                fitness(k) = -1000000;
-            end
-        end
-    end
-
-    pbest = population;
-    pbestFitness = fitness;
-    velocities = zeros(popSize, numVariables);
     for i = 1:popSize
         for j = 1:numVariables
             d = bounds(2, j) - bounds(1, j);
-            velocities(i, j) = -d + 2 * rand * d;
+
+            for k = 1:numAlleles
+                multiploides(i, j, k) = bounds(1, j) + rand * d;
+            end
         end
     end
-    w_inercia = wm;
 end
 
-% Determinar Gbest local
-[gbest, gbestFitness] = localBestNBH(popSize, numVariables, Nbh, pbest, pbestFitness, maximize);
+% Ajustar dominancia
+if huboCambio
+    dominanceLevels = dominanceLevels + 0.1 * randn(size(dominanceLevels));
+    dominanceLevels = max(dominanceLevels, 0);
+    s = sum(dominanceLevels, 3);
 
-% Actualizar posiciones
-[population, velocities, w_inercia] = actualizarPosicion(population, velocities, wm, c1, c2inicio, c2final, popSize, numVariables, pbest, gbest, iter, params.numIteraciones);
+    for k = 1:numAlleles
+        dominanceLevels(:, :, k) = dominanceLevels(:, :, k) ./ s;
+    end
+end
 
-% Rectificar restricciones
-li = bounds(1, :);
-ls = bounds(2, :);
+% Selección alelos dominantes
 for i = 1:popSize
     for j = 1:numVariables
-        if population(i, j) < li(j) || population(i, j) > ls(j)
-            population(i, j) = li(j) + rand * (ls(j) - li(j));
-            d = ls(j) - li(j);
-            velocities(i, j) = -d + 2 * rand * d;
+        probs = squeeze(dominanceLevels(i, j, :));
+        idx = randsample(1:numAlleles, 1, true, probs);
+        population(i, j) = multiploides(i, j, idx);
+    end
+end
+
+% Cruza
+numOffspring = round(popSize / 2);
+offspring = zeros(numOffspring * 2, numVariables);
+
+for i = 1:numOffspring
+    p1 = randi(popSize);
+    p2 = randi(popSize);
+
+    for j = 1:numVariables
+        if rand < crossoverRate
+            alpha = rand;
+            offspring(2*i-1, j) = alpha * population(p1, j) + (1 - alpha) * population(p2, j);
+            offspring(2*i, j) = (1 - alpha) * population(p1, j) + alpha * population(p2, j);
+        else
+            offspring(2*i-1, j) = population(p1, j);
+            offspring(2*i, j) = population(p2, j);
+        end
+
+        if rand < mutationRate
+            d = bounds(2, j) - bounds(1, j);
+            offspring(2*i-1, j) = offspring(2*i-1, j) + randn * 0.1 * d;
+        end
+
+        if rand < mutationRate
+            d = bounds(2, j) - bounds(1, j);
+            offspring(2*i, j) = offspring(2*i, j) + randn * 0.1 * d;
         end
     end
 end
 
-% Evaluar nuevas posiciones
-FOold = fitness;
+% Evaluación descendencia
+offspringFitness = zeros(size(offspring, 1), 1);
+
+for i = 1:size(offspring, 1)
+    f = evalFun(offspring(i, :), envParams);
+    offspringFitness(i) = maximize * -2 + 1 * f;
+end
+
+% Selección
+combinedPop = [population; offspring];
+combinedFit = [fitness; offspringFitness];
+[~, idx] = sort(combinedFit);
+population = combinedPop(idx(1:popSize), :);
+fitness = combinedFit(idx(1:popSize));
+
+% Actualizar multiploides
 for i = 1:popSize
-    fitness(i) = evalFun(population(i, :), envParams);
-    if maximize
-        fitness(i) = -fitness(i); % Negativo para maximizar
+    for j = 1:numVariables
+        worstIdx = randi(numAlleles);
+        multiploides(i, j, worstIdx) = population(i, j);
     end
 end
 
-% Actualizar inercia
-for k = 1:popSize
-    if (maximize && fitness(k) > FOold(k)) || (~maximize && fitness(k) < FOold(k))
-        wm(k) = (wm(k) * n(k) + w_inercia(k)) / (n(k) + 1);
-        n(k) = n(k) + 1;
-    end
-end
-
-% Actualizar mejores posiciones
-for i = 1:popSize
-    if (maximize && fitness(i) > pbestFitness(i)) || (~maximize && fitness(i) < pbestFitness(i))
-        pbest(i, :) = population(i, :);
-        pbestFitness(i) = fitness(i);
-    end
-end
-
-% Determinar mejor solución global
-bestFitness = min(pbestFitness);
-bestSolution = pbest(find(pbestFitness == bestFitness, 1), :);
-
-% Funciones auxiliares
-    function [posiciones, velocidades, w] = actualizarPosicion(posicion, velocidad, wm, c1, c2inicio, c2final, Np, numVariables, pbest, gbest, it, maxIter)
-        velocidades = zeros(Np, numVariables);
-        posiciones = zeros(Np, numVariables);
-        w = wm + 0.1 * randn(Np, 1);
-        c2 = c2inicio + (c2final - c2inicio) * (it / maxIter);
-        for i = 1:Np
-            for j = 1:numVariables
-                r1 = rand;
-                r2 = rand;
-                velocidades(i, j) = w(i) * velocidad(i, j) + c1 * r1 * (pbest(i, j) - posicion(i, j)) + ...
-                    c2 * r2 * (gbest(i, j) - posicion(i, j));
-                posiciones(i, j) = posicion(i, j) + velocidades(i, j);
-            end
-        end
-    end
-
-    function [gbest, gbestFitness] = localBestNBH(Np, numVariables, nbh, xpbest, FObest, maximize)
-        gbest = zeros(Np, numVariables);
-        gbestFitness = zeros(Np, 1);
-        for i = 1:Np
-            P1 = xpbest(nbh(i, 1), :);
-            aptitudP1 = FObest(nbh(i, 1));
-            P2 = xpbest(nbh(i, 2), :);
-            aptitudP2 = FObest(nbh(i, 2));
-            P3 = xpbest(nbh(i, 3), :);
-            aptitudP3 = FObest(nbh(i, 3));
-            cajaParticulas = [P1; P2; P3];
-            cajaAptitudes = [aptitudP1; aptitudP2; aptitudP3];
-            if maximize
-                FOLbest = max(cajaAptitudes);
-            else
-                FOLbest = min(cajaAptitudes);
-            end
-            gbest(i, :) = cajaParticulas(find(cajaAptitudes == FOLbest, 1), :);
-            gbestFitness(i) = FOLbest;
-        end
-    end
+bestFitness = min(fitness);
+bestSolution = population(find(fitness == bestFitness, 1), :);
 end
