@@ -10,11 +10,11 @@ popSize = params.popSize;
 numVariables = params.numVariables;
 bounds = params.bounds;
 maximize = params.maximize;
-c1 = 0.05; % Aprendizaje cognitivo
-c2inicio = 1; % Aprendizaje social inicial
-c2final = 1.5; % Aprendizaje social final
-wm = randn(popSize, 1); % Inercia inicial
-n = zeros(popSize, 1); % Contador para inercia
+c1 = 0.5; % Aprendizaje cognitivo
+c2inicio = 2.0; % Aprendizaje social inicial
+c2final = 2.0; % Aprendizaje social final
+wm = 0.3 * ones(popSize, 1);
+n = zeros(popSize, 1);
 
 % Matriz topológica Double-Linked
 Nbh = zeros(popSize, 3);

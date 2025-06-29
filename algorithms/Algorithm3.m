@@ -10,8 +10,8 @@ numVariables = params.numVariables;
 bounds = params.bounds;
 maximize = params.maximize;
 mutationRate = 0.1;
-crossoverRate = 0.8;
-numAlleles = 3;
+crossoverRate = 0.95;
+numAlleles = 4;
 
 % Inicializar multiploides y niveles de dominancia
 if iter == 1
