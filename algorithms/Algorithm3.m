@@ -1,4 +1,4 @@
-function [population, fitness, bestSolution, bestFitness] = GA_Multiploide(population, fitness, iter, params, evalFun, envParams, huboCambio)
+function [population, fitness, bestSolution, bestFitness] = Algorithm3(population, fitness, iter, params, evalFun, envParams, huboCambio)
 
 if huboCambio
     fprintf(">>> Cambio en el entorno en la iteración %d <<<\n", iter);

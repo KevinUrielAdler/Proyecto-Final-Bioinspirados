@@ -1,4 +1,4 @@
-function [population, fitness, bestSolution, bestFitness] = PSO_DivMantenida(population, fitness, iter, params, evalFun, envParams, huboCambio)
+function [population, fitness, bestSolution, bestFitness] = Algorithm2(population, fitness, iter, params, evalFun, envParams, huboCambio)
     % Parámetros del PSO
     popSize = params.popSize;
     numVariables = params.numVariables;
@@ -6,9 +6,9 @@ function [population, fitness, bestSolution, bestFitness] = PSO_DivMantenida(pop
     maximize = params.maximize;
     
     % Coeficientes de aprendizaje
-    c1 = 1.5; % Cognitivo
-    c2 = 1.5; % Social
-    w = 0.7;  % Inercia
+    c1 = params.c1; % Cognitivo
+    c2 = params.c2; % Social
+    w = params.w;  % Inercia
     
     % Parámetros de diversidad
     diversityThreshold = 0.1 * (bounds(2,1) - bounds(1,1)); % 10% del rango

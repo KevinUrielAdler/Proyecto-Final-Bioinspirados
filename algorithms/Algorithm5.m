@@ -5,9 +5,9 @@ popSize = params.popSize;
 numVariables = params.numVariables;
 bounds = params.bounds;
 maximize = params.maximize;
-c1 = 1;
-c2 = 2;
-w = 0.8;
+c1 = params.c1;
+c2 = params.c2;
+w = params.w;
 
 % --------------------------- Variables persistentes ---------------------------
 persistent pbest pbestFitness velocities historialDesplazamientos modeloRegresion ultimaPosicionOptima historialIteraciones
@@ -34,7 +34,7 @@ if huboCambio && ~isempty(historialDesplazamientos)
         end
         nuevaEstimacion = ultimaPosicionOptima + deltaOptimo;
 
-        for i = 1:round(popSize / 3)
+        for i = 1:popSize
             perturbacion = randn(1, numVariables) * 0.05;
             population(i, :) = nuevaEstimacion + perturbacion;
         end

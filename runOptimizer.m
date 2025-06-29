@@ -1,13 +1,13 @@
 % Codigo base para evaluar el algoritmo con los diferentes benchmarks
 % dinamicos
-function runOptimizer(benchmarkID, algorithmName)
+function [bestSolution, bestFitness] =  runOptimizer(benchmarkID, algorithmName)
 clc; close all; warning off all;
 
 % Asegurar el acceso a las carpetas de los benchmarks y los algoritmos
 addpath('benchmarks\', 'algorithms\');
 
 % Parametros
-numIteraciones = 50; % Numero de iteraciones
+numIteraciones = 20000; % Numero de iteraciones
 pobSize = 100; % Tamaño de la poblacion
 numVariables = 2; % Dimension de problema
 umbralCambio = 0.1; % Umbral para considerar un cambio en la funcion
@@ -16,6 +16,24 @@ numSentinelas = 100; % Numero de puntos de control para detectar cambios
 % Inicializar parametros del benchmark
 switch benchmarkID
     case 1 % df1_sphere
+
+        % Declaramos los pámetros óptimos para cada una de las funciones
+        if strcmp(algorithmName,'Algorithm1')
+            algoParams.c1 = 2.3;
+            algoParams.c2 = 2.7;
+            algoParams.w = 0.60;
+        elseif strcmp(algorithmName,'Algorithm2')
+            algoParams.c1 = 1.3;
+            algoParams.c2 = 2.7;
+            algoParams.w = 0.8;
+        elseif strcmp(algorithmName,'Algorithm5')
+            algoParams.c1 = 2;
+            algoParams.c2 = 1;
+            algoParams.w = 0.8;
+        elseif strcmp(algorithmName,'Algorithm6')
+        end
+
+
         dim = 2; % Numero de dimensiones
         bounds = [-5, 5]; % Limtes de la funcion
         numPeaks = 15; % Numero de picos
@@ -39,9 +57,25 @@ switch benchmarkID
         zMax = 70;
         evalFun = @(x, env) gaussian_mixture(x, env.h, env.w, env.c);
     case 2 % MPB_Griewank
+
+        if strcmp(algorithmName,'Algorithm1')
+            algoParams.c1 = 2;
+            algoParams.c2 = 1.5;
+            algoParams.w = 0.6;
+        elseif strcmp(algorithmName,'Algorithm2')
+            algoParams.c1 = 1.5;
+            algoParams.c2 = 1.5;
+            algoParams.w = 0.8;
+        elseif strcmp(algorithmName,'Algorithm5')
+            algoParams.c1 = 1.5;
+            algoParams.c2 = 0.5;
+            algoParams.w = 0.9;
+        elseif strcmp(algorithmName,'Algorithm6')
+        end
+
         dim = 2;
         bounds = [-50, 50];
-        numPeaks = 15; % Numero de picos
+        numPeaks = 20; % Numero de picos
         envParams.severity = 1.0; % Gravedad de cambio
         envParams.changeFrequency = 10; % Cada cuanto se realiza el cambio
         envParams.h = 30 + 40 * rand(numPeaks, 1);
@@ -49,11 +83,27 @@ switch benchmarkID
         envParams.c = bounds(1) + (bounds(2) - bounds(1)) * rand(numPeaks, dim);
         li = [bounds(1), bounds(1)];
         ls = [bounds(2), bounds(2)];
-        maximize = true;
-        gridStep = 0.2;
+        maximize = false;
+        gridStep = 1;
         zMax = 70;
         evalFun = @(x, env) mpb_eval(x, env.h, env.w, env.c);
     case 3 % GDBG_sphere
+        
+        if strcmp(algorithmName,'Algorithm1')
+            algoParams.c1 = 2.5;
+            algoParams.c2 = 1.5;
+            algoParams.w = 0.7;
+        elseif strcmp(algorithmName,'Algorithm2')
+            algoParams.c1 = 3;
+            algoParams.c2 = 2;
+            algoParams.w = 0.7;
+        elseif strcmp(algorithmName,'Algorithm5')
+            algoParams.c1 = 1.5;
+            algoParams.c2 = 1.5;
+            algoParams.w = 0.7;
+        elseif strcmp(algorithmName,'Algorithm6')
+        end
+
         dim = 2;
         bounds = [-5.12, 5.12];
         envParams.changeFrequency = 10; % Frecuencia de cambio
@@ -68,6 +118,22 @@ switch benchmarkID
         zMax = 50;
         evalFun = @(x, env) rastrigin_gdbg(x, env.center, env.angle);
     case 4 % switching_rastrigin
+
+        if strcmp(algorithmName,'Algorithm1')
+            algoParams.c1 = 1.5;
+            algoParams.c2 = 1.5;
+            algoParams.w = 0.3;
+        elseif strcmp(algorithmName,'Algorithm2')
+            algoParams.c1 = 1.5;
+            algoParams.c2 = 1.5;
+            algoParams.w = 0.3;
+        elseif strcmp(algorithmName,'Algorithm5')        
+            algoParams.c1 = 1.2;
+            algoParams.c2 = 1;
+            algoParams.w = 0.85;
+        elseif strcmp(algorithmName,'Algorithm6')
+        end
+
         dim = 2; % Dimensiones de la funcion
         bounds = [-5.12, 5.12]; % Limites de la funcion
         envParams.changeInterval = 10; % Intervalo de cambio de la funcion
@@ -85,6 +151,22 @@ switch benchmarkID
         evalFun = @(x, env) rastrigin_switching(x, env.A, env.center);
 
     case 5 % disjoint_rosenbrock
+
+        if strcmp(algorithmName,'Algorithm1')
+            algoParams.c1 = 1.8;
+            algoParams.c2 = 2.2;
+            algoParams.w = 0.4;
+        elseif strcmp(algorithmName,'Algorithm2')
+            algoParams.c1 = 1.3;
+            algoParams.c2 = 1.7;
+            algoParams.w = 0.8;
+        elseif strcmp(algorithmName,'Algorithm5')
+            algoParams.c1 = 2.2;
+            algoParams.c2 = 0.3;
+            algoParams.w = 0.95;
+        elseif strcmp(algorithmName,'Algorithm6')
+        end
+
         dim = 2;
         bounds = [-6, 6];
         envParams.changeInterval = 10; % Cada cuanto cambia
@@ -217,7 +299,8 @@ for it = 1:numIteraciones
     % Grid
     [X, Y] = meshgrid(bounds(1):gridStep:bounds(2));
     Z = zeros(size(X));
-
+    surf(X, Y, Z, 'EdgeColor', 'none');
+    colormap('jet'); % Cambiar colormap
 
     for i = 1:size(X, 1)
         for j = 1:size(X, 2)
@@ -225,6 +308,9 @@ for it = 1:numIteraciones
             Z(i,j) = evalFun(pt, envParams);
         end
     end
+
+    % Z = (Z - min(min(Z))) / (max(max(Z)) - min(min(Z))); % Normalizar Z
+
     clf;
     surf(X, Y, Z);
     hold on;
