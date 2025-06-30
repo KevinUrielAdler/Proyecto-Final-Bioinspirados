@@ -12,8 +12,8 @@ bounds = params.bounds;
 maximize = params.maximize;
 c1 = params.c1; % Aprendizaje cognitivo
 c2inicio = params.c2inicio; % Aprendizaje social inicial
-c2final = params.c2final; % Aprendizaje social final
-wm = max(0.1, min(1, params.wm_mean + 0.05 * randn(popSize, 1))); % inercia
+c2final = params.c2f; % Aprendizaje social final
+wm = max(0.1, min(1, params.wm_mean + 0.05 * randn(popSize, 1))); % incerica inicial
 n = zeros(popSize, 1); % Contador para inercia
 
 % Matriz topológica Double-Linked
