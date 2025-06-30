@@ -7,7 +7,7 @@ clc; close all; warning off all;
 addpath('benchmarks\', 'algorithms\');
 
 % Parametros
-numIteraciones = 50; % Numero de iteraciones
+numIteraciones = 20000; % Numero de iteraciones
 pobSize = 100; % Tamaño de la poblacion
 numVariables = 2; % Dimension de problema
 umbralCambio = 0.1; % Umbral para considerar un cambio en la funcion
